@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testng-results ignored="0" total="4" passed="4" failed="0" skipped="0">
+  <reporter-output>
+  </reporter-output>
+  <suite started-at="2023-06-28T15:33:26 IST" name="Default suite" finished-at="2023-06-28T15:35:29 IST" duration-ms="123003">
+    <groups>
+    </groups>
+    <test started-at="2023-06-28T15:33:26 IST" name="Default test" finished-at="2023-06-28T15:35:29 IST" duration-ms="123003">
+      <class name="testPages.LoginPage_Tests">
+        <test-method is-config="true" signature="setupMethod()[pri:0, instance:testPages.LoginPage_Tests@797cf65c]" started-at="2023-06-28T15:33:26 IST" name="setupMethod" finished-at="2023-06-28T15:34:18 IST" duration-ms="52074" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- setupMethod -->
+        <test-method signature="APMTlogins(java.lang.Object)[pri:0, instance:testPages.LoginPage_Tests@797cf65c]" started-at="2023-06-28T15:34:18 IST" name="APMTlogins" data-provider="APMTLogin" finished-at="2023-06-28T15:34:27 IST" duration-ms="8341" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[{password=Snipe@66, role=seller, username=anilkesti@gmail.com}]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- APMTlogins -->
+        <test-method is-config="true" signature="setupMethod()[pri:0, instance:testPages.LoginPage_Tests@797cf65c]" started-at="2023-06-28T15:34:27 IST" name="setupMethod" finished-at="2023-06-28T15:34:35 IST" duration-ms="7849" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- setupMethod -->
+        <test-method is-config="true" signature="cleanUp()[pri:0, instance:testPages.LoginPage_Tests@797cf65c]" started-at="2023-06-28T15:34:27 IST" name="cleanUp" finished-at="2023-06-28T15:34:27 IST" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- cleanUp -->
+        <test-method signature="APMTlogins(java.lang.Object)[pri:0, instance:testPages.LoginPage_Tests@797cf65c]" started-at="2023-06-28T15:34:35 IST" name="APMTlogins" data-provider="APMTLogin" finished-at="2023-06-28T15:34:43 IST" duration-ms="8515" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[{password=Vmanager@272, role=verification Manager, username=vmmanager272@gmail.com}]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- APMTlogins -->
+        <test-method is-config="true" signature="cleanUp()[pri:0, instance:testPages.LoginPage_Tests@797cf65c]" started-at="2023-06-28T15:34:43 IST" name="cleanUp" finished-at="2023-06-28T15:34:43 IST" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- cleanUp -->
+        <test-method is-config="true" signature="setupMethod()[pri:0, instance:testPages.LoginPage_Tests@797cf65c]" started-at="2023-06-28T15:34:43 IST" name="setupMethod" finished-at="2023-06-28T15:34:59 IST" duration-ms="15616" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- setupMethod -->
+        <test-method signature="APMTlogins(java.lang.Object)[pri:0, instance:testPages.LoginPage_Tests@797cf65c]" started-at="2023-06-28T15:34:59 IST" name="APMTlogins" data-provider="APMTLogin" finished-at="2023-06-28T15:35:07 IST" duration-ms="8782" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[{password=Sales@273, role=sales Manager, username=salesmanager273@gmail.com}]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- APMTlogins -->
+        <test-method is-config="true" signature="cleanUp()[pri:0, instance:testPages.LoginPage_Tests@797cf65c]" started-at="2023-06-28T15:35:07 IST" name="cleanUp" finished-at="2023-06-28T15:35:07 IST" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- cleanUp -->
+        <test-method is-config="true" signature="setupMethod()[pri:0, instance:testPages.LoginPage_Tests@797cf65c]" started-at="2023-06-28T15:35:07 IST" name="setupMethod" finished-at="2023-06-28T15:35:18 IST" duration-ms="10839" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- setupMethod -->
+        <test-method signature="APMTlogins(java.lang.Object)[pri:0, instance:testPages.LoginPage_Tests@797cf65c]" started-at="2023-06-28T15:35:18 IST" name="APMTlogins" data-provider="APMTLogin" finished-at="2023-06-28T15:35:29 IST" duration-ms="10895" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[{password=Admin@271, role=admin, username=admanager271@gmail.com}]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- APMTlogins -->
+        <test-method is-config="true" signature="cleanUp()[pri:0, instance:testPages.LoginPage_Tests@797cf65c]" started-at="2023-06-28T15:35:29 IST" name="cleanUp" finished-at="2023-06-28T15:35:29 IST" duration-ms="1" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- cleanUp -->
+      </class> <!-- testPages.LoginPage_Tests -->
+    </test> <!-- Default test -->
+  </suite> <!-- Default suite -->
+</testng-results>

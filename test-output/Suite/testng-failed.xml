@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Failed suite [Suite]" guice-stage="DEVELOPMENT">
+  <test thread-count="5" name="Test(failed)">
+    <classes>
+      <class name="testPages.LoginPage_Tests">
+        <methods>
+          <include name="setupMethod"/>
+          <include name="APMTlogins" invocation-numbers="0 1 2 3"/>
+          <include name="cleanUp"/>
+        </methods>
+      </class> <!-- testPages.LoginPage_Tests -->
+      <class name="testPages.VerificationManager">
+        <methods>
+          <include name="setupMethod"/>
+          <include name="APMTVerificationManager"/>
+          <include name="cleanUp"/>
+        </methods>
+      </class> <!-- testPages.VerificationManager -->
+      <class name="testPages.SalesManager_Tests">
+        <methods>
+          <include name="setupMethod"/>
+          <include name="APMTSalesManager"/>
+          <include name="cleanUp"/>
+        </methods>
+      </class> <!-- testPages.SalesManager_Tests -->
+    </classes>
+  </test> <!-- Test(failed) -->
+</suite> <!-- Failed suite [Suite] -->
