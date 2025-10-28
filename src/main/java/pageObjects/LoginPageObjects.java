@@ -11,13 +11,13 @@ import testBase.TestBase;
 
 public class LoginPageObjects extends TestBase {
 	
-	@FindBy (name = "emailId")
+	@FindBy (name = "email")
 	WebElement email;
 	
 	@FindBy(name = "password")
 	WebElement password;
 	
-	@FindBy(xpath = "//span[text()='Login']")
+	@FindBy(xpath = "//button[text()='Sign In']")
 	WebElement login;
 	
 
@@ -28,14 +28,9 @@ public class LoginPageObjects extends TestBase {
 	
 	public String login(HashMap<String, String> testData) throws Exception {
 		System.out.println(driver);
-		
-		Thread.sleep(2000);
 		email.sendKeys(testData.get(CommonConstants.USERNAME).toString());
 		password.sendKeys(testData.get(CommonConstants.PASSWORD).toString());
-		Thread.sleep(3000);
 		login.click();
-		Thread.sleep(3000);
-		commonMethods.handleAlert();
 		return driver.getTitle();
 	}
 

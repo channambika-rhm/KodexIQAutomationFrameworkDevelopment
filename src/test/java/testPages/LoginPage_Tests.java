@@ -1,7 +1,5 @@
 package testPages;
 
-import static org.testng.Assert.assertEquals;
-
 import java.util.HashMap;
 
 import org.testng.Assert;
@@ -12,13 +10,10 @@ import reusableComponents.ExcelOperations;
 import testBase.TestBase;
 
 public class LoginPage_Tests extends TestBase{
-
 	
 	String fileName = "//src//test//resources//testData//APMT_Logins.xlsx";
 
-	ExcelOperations excel = new ExcelOperations(fileName, "Sheet1");
-	
-	
+	ExcelOperations excel = new ExcelOperations(fileName, "Login");	
 
 	@Test(dataProvider = "APMTLogin")
 	public void APMTlogins(Object obj1) throws Exception {
@@ -27,14 +22,11 @@ public class LoginPage_Tests extends TestBase{
 		System.out.println("In login method");
 		
 		String title  = loginPageObjects.login(testData);
-		//String expectedTitle = "qwertt";
+		String expectedTitle = "KodeXIQ";
 		
-		//Assert.assertEquals(title, expectedTitle, "Title not matched");
+		Assert.assertEquals(title, expectedTitle, "Title not matched");
 		System.out.println("The Title is:" + title);
-		System.out.println("Login done");
-		
-		
-	
+		System.out.println("Login done");	
 	}
 	
 	
@@ -48,7 +40,6 @@ public class LoginPage_Tests extends TestBase{
 				obj[i - 1][0] = testData;
 			}
 			return obj;
-
 		}
 
 

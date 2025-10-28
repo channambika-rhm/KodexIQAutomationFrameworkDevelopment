@@ -10,10 +10,10 @@ public class HomePage_Tests  extends TestBase{
 	
 	
 	@Test 
-	public void loginButtonOnHomePage(Object obj1) throws Exception {
+	public void loginButtonOnHomePage() throws Exception {
 		
 		
-	//homePageObjects.loginButton();
+	homePageObjects.loginButton();
 	
 	}
 

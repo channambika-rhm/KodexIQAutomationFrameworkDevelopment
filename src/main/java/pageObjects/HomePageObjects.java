@@ -10,11 +10,11 @@ import testBase.TestBase;
 
 public class HomePageObjects  extends TestBase{
 	
-	@FindBy(xpath = "//a[text()='Login']")
+	@FindBy(xpath = "//button[text()='Login']")
 	WebElement loginButton;
 	
 	
-	@FindBy( xpath = "//a[text()='SignUp']")
+	@FindBy( xpath = "//button[text()='SignUp']")
 	WebElement signUpButton;
 	
 	

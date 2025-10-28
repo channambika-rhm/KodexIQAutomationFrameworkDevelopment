@@ -1,5 +1,6 @@
 package testBase;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.WebDriver;
@@ -38,17 +39,18 @@ public class TestBase extends ObjectsRepo{
 		String url = PropertiesOperations.getPropertyValueByKey("url");
 		
 		if(browser.equalsIgnoreCase("chrome")) {
-			WebDriverManager.chromedriver().setup();
+//			WebDriverManager.chromedriver().setup(); // selenium -4 does not require setup explicitly
 			 driver = new ChromeDriver();
 		} else if(browser.equalsIgnoreCase("firefox")) {
-			WebDriverManager.firefoxdriver().setup();
+//			WebDriverManager.firefoxdriver().setup();
 			 driver = new FirefoxDriver();
 		} else if(browser.equalsIgnoreCase("ie")) {
-			WebDriverManager.iedriver().setup();
+//			WebDriverManager.iedriver().setup();
 			 driver = new InternetExplorerDriver();
 		}
 
-		driver.manage().timeouts().implicitlyWait(50, TimeUnit.SECONDS);
+//		driver.manage().timeouts().implicitlyWait(50, TimeUnit.SECONDS); selenium-4 uses Duration class for implicit wait
+		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(50));
 		driver.manage().window().maximize();
 		
 		driver.get(url);
@@ -66,6 +68,6 @@ public class TestBase extends ObjectsRepo{
 	
 	@AfterMethod
 	public void cleanUp() {
-	//	driver.close();
+		driver.close();
 	}
 }
