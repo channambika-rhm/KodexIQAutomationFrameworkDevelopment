@@ -1,8 +1,6 @@
 package testBase;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -10,11 +8,8 @@ import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
 import pageObjects.HomePageObjects;
 import pageObjects.LoginPageObjects;
-import pageObjects.SalesManagerObjects;
-import pageObjects.VerificationManPageObjects;
 import reusableComponents.CommonMethods;
 //import pageObjects.EnterInsurantDataPageObjects;
 //import pageObjects.EnterProductDataPageObjects;
@@ -29,9 +24,7 @@ public class TestBase extends ObjectsRepo{
 	
 	public HomePageObjects homePageObjects ;
 	public LoginPageObjects loginPageObjects ;
-	public SalesManagerObjects salesManagerObjects;
 	public CommonMethods commonMethods = new CommonMethods();
-	public VerificationManPageObjects verifyManger;
 	
 	public void LaunchBrowserAndNavigate() throws Exception {
 		//read prop file and get browser and url
@@ -62,8 +55,6 @@ public class TestBase extends ObjectsRepo{
 		LaunchBrowserAndNavigate();
 		homePageObjects = new HomePageObjects();
 		loginPageObjects = new LoginPageObjects();
-		salesManagerObjects = new SalesManagerObjects();
-		verifyManger = new VerificationManPageObjects();
 	}
 	
 	@AfterMethod
