@@ -2,7 +2,6 @@ package reusableComponents;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,8 +13,15 @@ public class PropertiesOperations {
 	public static String getPropertyValueByKey(String key) throws Exception {
 		
 		String propFilePath = System.getProperty("user.dir")+"/src/test/resources/config.properties";
-		FileInputStream fis = new FileInputStream(propFilePath);
-		prop.load(fis);
+		FileInputStream fis;
+		try {
+			fis = new FileInputStream(propFilePath);
+			prop.load(fis);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		
 		//2. read data
 		String value = prop.get(key).toString();

@@ -21,7 +21,7 @@ public class Utility  extends TestBase {
 		try {
 			//Using the time date time stamp to create unique file name for the each screenshot
 			System.out.println("path before");
-			FileUtils.copyFile(screenshotFile, new File ("C:\\Channambika\\HSI_Training\\KODEXIQ\\KodexIQAutomation\\KodexIQAutomationFrameworkDevelopment\\screenshots"+timestamp()+".png"));
+			FileUtils.copyFile(screenshotFile, new File ("C:/Channambika/HSI_Training/KODEXIQ/KodexIQAutomation/KodexIQAutomationFrameworkDevelopment/screenshots"+timestamp()+".png"));
 			System.out.println("path after");
 		}catch (IOException e) {
 			e.printStackTrace();

@@ -1,64 +1,77 @@
 package testBase;
 
 import java.time.Duration;
+
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import pageObjects.HomePageObjects;
 import pageObjects.LoginPageObjects;
-import reusableComponents.CommonMethods;
-//import pageObjects.EnterInsurantDataPageObjects;
-//import pageObjects.EnterProductDataPageObjects;
-//import pageObjects.EnterVehicalDataPageObjects;
-//import pageObjects.HomePageObjects;
-//import pageObjects.SelectPriceOptionsPageObjects;
 import reusableComponents.PropertiesOperations;
 
 public class TestBase extends ObjectsRepo{
 	
 	public static WebDriver driver;
+	String browser ;
+	protected String url;
+	protected String fileName;
 	
-	public HomePageObjects homePageObjects ;
-	public LoginPageObjects loginPageObjects ;
-	public CommonMethods commonMethods = new CommonMethods();
-	
-	public void LaunchBrowserAndNavigate() throws Exception {
-		//read prop file and get browser and url
-		String browser = PropertiesOperations.getPropertyValueByKey("browser");
-		String url = PropertiesOperations.getPropertyValueByKey("url");
-		
+    /**
+     * Read configuration properties once per class. This ensures subclasses'
+     * @BeforeClass methods can rely on fileName/url being available.
+     */
+    @BeforeClass
+    public void readConfig() throws Exception {
+        url = PropertiesOperations.getPropertyValueByKey("url");
+        fileName = PropertiesOperations.getPropertyValueByKey("testDataLocation");
+        browser = PropertiesOperations.getPropertyValueByKey("browser");
+    }
+    
+    /**
+     * Setup browser before each test method to keep tests isolated.
+     */
+	@BeforeMethod   /// it will get execute before each test method within current class
+	public void setupMethod() throws Exception {	
+        if (browser == null) {
+            // fallback read (shouldn't be needed if readConfig runs)
+            browser = PropertiesOperations.getPropertyValueByKey("browser");
+        }
+        
 		if(browser.equalsIgnoreCase("chrome")) {
-//			WebDriverManager.chromedriver().setup(); // selenium -4 does not require setup explicitly
 			 driver = new ChromeDriver();
 		} else if(browser.equalsIgnoreCase("firefox")) {
-//			WebDriverManager.firefoxdriver().setup();
 			 driver = new FirefoxDriver();
 		} else if(browser.equalsIgnoreCase("ie")) {
-//			WebDriverManager.iedriver().setup();
 			 driver = new InternetExplorerDriver();
-		}
+		} else {
+            // default to chrome if unknown
+            driver = new ChromeDriver();
+        }
 
-//		driver.manage().timeouts().implicitlyWait(50, TimeUnit.SECONDS); selenium-4 uses Duration class for implicit wait
 		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(50));
 		driver.manage().window().maximize();
 		
 		driver.get(url);
 		
-	}
-
-	@BeforeMethod   /// it will get execute before each test method within current class
-	public void setupMethod() throws Exception {
-		LaunchBrowserAndNavigate();
-		homePageObjects = new HomePageObjects();
-		loginPageObjects = new LoginPageObjects();
+		// initialize page objects with driver
+		homePageObjects = new HomePageObjects(driver);
+		loginPageObjects = new LoginPageObjects(driver);
 	}
 	
 	@AfterMethod
 	public void cleanUp() {
-		driver.close();
+		if (driver != null) {
+            try {
+                driver.quit();
+            } catch (Exception e) {
+                System.out.println("Warning: error during driver.quit(): " + e.getMessage());
+            }
+        }
 	}
 }
