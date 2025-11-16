@@ -5,346 +5,365 @@ import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 /**
- * Enhanced ExcelOperations class with:
- * ✅ Auto Backup & Silent Restore
- * ✅ Backup Retention (7 days) + Max 5 Backups
- * ✅ Compact File Logging
- * ✅ Thread-safe Writes
- * ✅ Bulk Write Support with Auto Timestamp
+ * Enhanced ExcelOperations class with: ✅ Auto Backup & Silent Restore ✅ Backup
+ * Retention (7 days) + Max 5 Backups ✅ Compact File Logging ✅ Thread-safe
+ * Writes ✅ Bulk Write Support with Auto Timestamp
  */
 public class ExcelOperations {
 
-    private final String filePath;
-    private final String sheetName;
-    private static final String BACKUP_DIR = System.getProperty("user.dir") + "/backups/";
-    private static final String LOG_DIR = System.getProperty("user.dir") + "/logs/";
-    private static final String LOG_FILE = LOG_DIR + "ExcelOps.log";
-    private static final int MAX_BACKUPS = 5;
-    private static final int BACKUP_RETENTION_DAYS = 7;
+	private final String filePath;
+	private final String sheetName;
+	private static final String BACKUP_DIR = System.getProperty("user.dir") + "/backups/";
+	private static final String LOG_DIR = System.getProperty("user.dir") + "/logs/";
+	private static final String LOG_FILE = LOG_DIR + "ExcelOps.log";
+	private static final int MAX_BACKUPS = 5;
+	private static final int BACKUP_RETENTION_DAYS = 7;
 
-    public ExcelOperations(String excelFile, String sheetName) {
-        this.filePath = System.getProperty("user.dir") + excelFile;
-        this.sheetName = sheetName;
-        initDirectories();
-        checkAndRestoreIfCorrupted();
-    }
+	public ExcelOperations(String excelFile, String sheetName) {
+		if (excelFile == null || excelFile.trim().isEmpty()) {
+			throw new IllegalArgumentException("Excel file path must not be null/empty");
+		}
+		this.filePath = resolvePath(excelFile);
+		this.sheetName = sheetName;
+		initDirectories();
+		checkAndRestoreIfCorrupted();
+	}
 
-    /** Initialize required directories */
-    private void initDirectories() {
-        new File(BACKUP_DIR).mkdirs();
-        new File(LOG_DIR).mkdirs();
-    }
+	private String resolvePath(String path) {
+		File f = new File(path);
+		if (!f.isAbsolute()) {
+			// allow leading slash in config, remove leading slashes then append to user.dir
+			String cleaned = path.replaceFirst("^/+", "");
+			f = new File(System.getProperty("user.dir"), cleaned);
+		}
+		return f.getAbsolutePath();
+	}
 
-    /** Write compact log entries */
-    private synchronized void log(String level, String message) {
-        try (FileWriter fw = new FileWriter(LOG_FILE, true);
-             BufferedWriter bw = new BufferedWriter(fw);
-             PrintWriter out = new PrintWriter(bw)) {
+	/** Initialize required directories */
+	private void initDirectories() {
+		new File(BACKUP_DIR).mkdirs();
+		new File(LOG_DIR).mkdirs();
+	}
 
-            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-            out.println(timestamp + " " + level + " " + message);
+	/** Write compact log entries */
+	private synchronized void log(String level, String message) {
+		try (FileWriter fw = new FileWriter(LOG_FILE, true);
+				BufferedWriter bw = new BufferedWriter(fw);
+				PrintWriter out = new PrintWriter(bw)) {
 
-        } catch (IOException e) {
-            System.out.println("⚠️ Failed to write log: " + e.getMessage());
-        }
-    }
+			String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+			out.println(timestamp + " " + level + " " + message);
 
-    /** Check if Excel file is corrupted and restore silently */
-    private void checkAndRestoreIfCorrupted() {
-        try (FileInputStream fis = new FileInputStream(filePath)) {
-            WorkbookFactory.create(fis).close();
-        } catch (Exception e) {
-            log("WARN", "Excel file corrupted → attempting restore");
-            restoreLatestBackup();
-        }
-    }
+		} catch (IOException e) {
+			System.out.println("⚠️ Failed to write log: " + e.getMessage());
+		}
+	}
 
-    /** Open workbook safely */
-    private Workbook openWorkbook() throws Exception {
-        try (FileInputStream fis = new FileInputStream(filePath)) {
-            return WorkbookFactory.create(fis);
-        }
-    }
+	/** Check if Excel file is corrupted and restore silently */
+	private void checkAndRestoreIfCorrupted() {
+		try (FileInputStream fis = new FileInputStream(filePath)) {
+			WorkbookFactory.create(fis).close();
+		} catch (Exception e) {
+			log("WARN", "Excel file corrupted → attempting restore");
+			restoreLatestBackup();
+		}
+	}
 
-    /** Create automatic backup before modification */
-    private synchronized void createBackup() {
-        try {
-            File original = new File(filePath);
-            if (!original.exists()) return;
+	/** Open workbook safely */
+	private Workbook openWorkbook() throws Exception {
+		try (FileInputStream fis = new FileInputStream(filePath)) {
+			return WorkbookFactory.create(fis);
+		}
+	}
 
-            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String backupFile = BACKUP_DIR + "Backup_" + timestamp + "_" + new File(filePath).getName() + ".bak";
-            Files.copy(original.toPath(), new File(backupFile).toPath());
-            log("INFO", "Backup created: " + backupFile);
+	/** Create automatic backup before modification */
+	private synchronized void createBackup() {
+		try {
+			File original = new File(filePath);
+			if (!original.exists())
+				return;
 
-            cleanupOldBackups();
+			String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+			String backupFile = BACKUP_DIR + "Backup_" + timestamp + "_" + new File(filePath).getName() + ".bak";
+			Files.copy(original.toPath(), new File(backupFile).toPath());
+			log("INFO", "Backup created: " + backupFile);
 
-        } catch (Exception e) {
-            log("ERROR", "Failed to create backup: " + e.getMessage());
-        }
-    }
+			cleanupOldBackups();
 
-    /** Restore the latest valid backup silently */
-    private synchronized void restoreLatestBackup() {
-        try {
-            File backupFolder = new File(BACKUP_DIR);
-            File[] backups = backupFolder.listFiles((dir, name) -> name.endsWith(".bak"));
+		} catch (Exception e) {
+			log("ERROR", "Failed to create backup: " + e.getMessage());
+		}
+	}
 
-            if (backups == null || backups.length == 0) {
-                log("ERROR", "No backup files found to restore");
-                return;
-            }
+	/** Restore the latest valid backup silently */
+	private synchronized void restoreLatestBackup() {
+		try {
+			File backupFolder = new File(BACKUP_DIR);
+			File[] backups = backupFolder.listFiles((dir, name) -> name.endsWith(".bak"));
 
-            Arrays.sort(backups, Comparator.comparingLong(File::lastModified).reversed());
-            File latestBackup = backups[0];
+			if (backups == null || backups.length == 0) {
+				log("ERROR", "No backup files found to restore");
+				return;
+			}
 
-            Files.copy(latestBackup.toPath(), new File(filePath).toPath(),
-                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            log("INFO", "Excel auto-restored from backup: " + latestBackup.getName());
+			Arrays.sort(backups, Comparator.comparingLong(File::lastModified).reversed());
+			File latestBackup = backups[0];
 
-        } catch (Exception e) {
-            log("ERROR", "Failed to restore from backup: " + e.getMessage());
-        }
-    }
+			Files.copy(latestBackup.toPath(), new File(filePath).toPath(),
+					java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+			log("INFO", "Excel auto-restored from backup: " + latestBackup.getName());
 
-    /** Clean up old backups by age and count */
-    private synchronized void cleanupOldBackups() {
-        try {
-            File backupFolder = new File(BACKUP_DIR);
-            File[] backups = backupFolder.listFiles((dir, name) -> name.endsWith(".bak"));
-            if (backups == null || backups.length == 0) return;
+		} catch (Exception e) {
+			log("ERROR", "Failed to restore from backup: " + e.getMessage());
+		}
+	}
 
-            long now = System.currentTimeMillis();
-            List<File> validBackups = new ArrayList<>();
+	/** Clean up old backups by age and count */
+	private synchronized void cleanupOldBackups() {
+		try {
+			File backupFolder = new File(BACKUP_DIR);
+			File[] backups = backupFolder.listFiles((dir, name) -> name.endsWith(".bak"));
+			if (backups == null || backups.length == 0)
+				return;
 
-            for (File backup : backups) {
-                long diffDays = (now - backup.lastModified()) / (1000 * 60 * 60 * 24);
-                if (diffDays > BACKUP_RETENTION_DAYS) {
-                    backup.delete();
-                    log("INFO", "Deleted expired backup: " + backup.getName());
-                } else {
-                    validBackups.add(backup);
-                }
-            }
+			long now = System.currentTimeMillis();
+			List<File> validBackups = new ArrayList<>();
 
-            validBackups = validBackups.stream()
-                    .sorted(Comparator.comparingLong(File::lastModified).reversed())
-                    .collect(Collectors.toList());
+			for (File backup : backups) {
+				long diffDays = (now - backup.lastModified()) / (1000 * 60 * 60 * 24);
+				if (diffDays > BACKUP_RETENTION_DAYS) {
+					backup.delete();
+					log("INFO", "Deleted expired backup: " + backup.getName());
+				} else {
+					validBackups.add(backup);
+				}
+			}
 
-            for (int i = MAX_BACKUPS; i < validBackups.size(); i++) {
-                File oldBackup = validBackups.get(i);
-                oldBackup.delete();
-                log("INFO", "Deleted old backup (exceeded limit): " + oldBackup.getName());
-            }
+			validBackups = validBackups.stream().sorted(Comparator.comparingLong(File::lastModified).reversed())
+					.collect(Collectors.toList());
 
-        } catch (Exception e) {
-            log("ERROR", "Failed to clean up backups: " + e.getMessage());
-        }
-    }
+			for (int i = MAX_BACKUPS; i < validBackups.size(); i++) {
+				File oldBackup = validBackups.get(i);
+				oldBackup.delete();
+				log("INFO", "Deleted old backup (exceeded limit): " + oldBackup.getName());
+			}
 
-    /** Read test data into a map */
-    public HashMap<String, String> getTestDataInMap(int rowNum) throws Exception {
-        HashMap<String, String> hm = new HashMap<>();
+		} catch (Exception e) {
+			log("ERROR", "Failed to clean up backups: " + e.getMessage());
+		}
+	}
 
-        try (Workbook wb = openWorkbook()) {
-            Sheet sh = wb.getSheet(sheetName);
-            Row headerRow = sh.getRow(0);
-            Row dataRow = sh.getRow(rowNum);
+	/** Read test data into a map */
+	public HashMap<String, String> getTestDataInMap(int rowNum) throws Exception {
+		HashMap<String, String> hm = new HashMap<>();
 
-            for (int i = 0; i < headerRow.getLastCellNum(); i++) {
-                Cell headerCell = headerRow.getCell(i);
-                String headerName = (headerCell == null) ? "" : headerCell.toString().trim();
+		try (Workbook wb = openWorkbook()) {
+			Sheet sh = wb.getSheet(sheetName);
+			Row headerRow = sh.getRow(0);
+			Row dataRow = sh.getRow(rowNum);
 
-                Cell dataCell = (dataRow == null) ? null : dataRow.getCell(i);
-                if (dataCell == null && dataRow != null) {
-                    dataCell = dataRow.createCell(i);
-                    dataCell.setCellValue("");
-                }
+			for (int i = 0; i < headerRow.getLastCellNum(); i++) {
+				Cell headerCell = headerRow.getCell(i);
+				String headerName = (headerCell == null) ? "" : headerCell.toString().trim();
 
-                if (dataCell != null) {
-                    dataCell.setCellType(CellType.STRING);
-                    hm.put(headerName, dataCell.getStringCellValue().trim());
-                }
-            }
-        }
-        return hm;
-    }
+				Cell dataCell = (dataRow == null) ? null : dataRow.getCell(i);
+				if (dataCell == null && dataRow != null) {
+					dataCell = dataRow.createCell(i);
+					dataCell.setCellValue("");
+				}
 
-    public int getRowCount() throws Exception {
-        try (Workbook wb = openWorkbook()) {
-            return wb.getSheet(sheetName).getLastRowNum();
-        }
-    }
+				if (dataCell != null) {
+					dataCell.setCellType(CellType.STRING);
+					hm.put(headerName, dataCell.getStringCellValue().trim());
+				}
+			}
+		}
+		return hm;
+	}
 
-    /** Write individual result/status/time */
-    public synchronized void writeResult(int rowNum, String status) {
-        writeToColumn(rowNum, "Status", status, true);
-    }
+	public int getRowCount() throws Exception {
+		try (Workbook wb = openWorkbook()) {
+			return wb.getSheet(sheetName).getLastRowNum();
+		}
+	}
 
-    public synchronized void writeActualResult(int rowNum, String actualResult) {
-        writeToColumn(rowNum, "ActualResult", actualResult, false);
-    }
+	/** Write individual result/status/time */
+	public synchronized void writeResult(int rowNum, String status) {
+		writeToColumn(rowNum, "Status", status, true);
+	}
 
-    public synchronized void writeExecutionTime(int rowNum) {
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        writeToColumn(rowNum, "ExecutionTime", timestamp, false);
-    }
+	public synchronized void writeActualResult(int rowNum, String actualResult) {
+		writeToColumn(rowNum, "ActualResult", actualResult, false);
+	}
 
-    /** Internal write method */
-    private synchronized void writeToColumn(int rowNum, String columnName, String value, boolean applyColor) {
-        Workbook wb = null;
-        FileOutputStream fos = null;
+	public synchronized void writeExecutionTime(int rowNum) {
+		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+		writeToColumn(rowNum, "ExecutionTime", timestamp, false);
+	}
 
-        try {
-            createBackup();
+	/** Internal write method */
+	private synchronized void writeToColumn(int rowNum, String columnName, String value, boolean applyColor) {
+		Workbook wb = null;
+		FileOutputStream fos = null;
 
-            try (FileInputStream fis = new FileInputStream(filePath)) {
-                wb = WorkbookFactory.create(fis);
-            }
+		try {
+			createBackup();
 
-            Sheet sh = wb.getSheet(sheetName);
-            Row headerRow = sh.getRow(0);
-            int colIndex = -1;
+			try (FileInputStream fis = new FileInputStream(filePath)) {
+				wb = WorkbookFactory.create(fis);
+			}
 
-            for (int i = 0; i < headerRow.getLastCellNum(); i++) {
-                if (headerRow.getCell(i).getStringCellValue().equalsIgnoreCase(columnName)) {
-                    colIndex = i;
-                    break;
-                }
-            }
+			Sheet sh = wb.getSheet(sheetName);
+			Row headerRow = sh.getRow(0);
+			int colIndex = -1;
 
-            if (colIndex == -1) {
-                colIndex = headerRow.getLastCellNum();
-                Cell newHeader = headerRow.createCell(colIndex);
-                newHeader.setCellValue(columnName);
-            }
+			for (int i = 0; i < headerRow.getLastCellNum(); i++) {
+				if (headerRow.getCell(i).getStringCellValue().equalsIgnoreCase(columnName)) {
+					colIndex = i;
+					break;
+				}
+			}
 
-            Row dataRow = sh.getRow(rowNum);
-            if (dataRow == null) dataRow = sh.createRow(rowNum);
+			if (colIndex == -1) {
+				colIndex = headerRow.getLastCellNum();
+				Cell newHeader = headerRow.createCell(colIndex);
+				newHeader.setCellValue(columnName);
+			}
 
-            Cell cell = dataRow.getCell(colIndex);
-            if (cell == null) cell = dataRow.createCell(colIndex);
-            cell.setCellValue(value);
+			Row dataRow = sh.getRow(rowNum);
+			if (dataRow == null)
+				dataRow = sh.createRow(rowNum);
 
-            if (applyColor && columnName.equalsIgnoreCase("Status")) {
-                CellStyle style = wb.createCellStyle();
-                style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-                if (value.equalsIgnoreCase("PASS")) {
-                    style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
-                } else if (value.equalsIgnoreCase("FAIL")) {
-                    style.setFillForegroundColor(IndexedColors.RED.getIndex());
-                } else {
-                    style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-                }
-                Font font = wb.createFont();
-                font.setColor(IndexedColors.BLACK.getIndex());
-                style.setFont(font);
-                cell.setCellStyle(style);
-            }
+			Cell cell = dataRow.getCell(colIndex);
+			if (cell == null)
+				cell = dataRow.createCell(colIndex);
+			cell.setCellValue(value);
 
-            fos = new FileOutputStream(filePath);
-            wb.write(fos);
+			if (applyColor && columnName.equalsIgnoreCase("Status")) {
+				CellStyle style = wb.createCellStyle();
+				style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				if (value.equalsIgnoreCase("PASS")) {
+					style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+				} else if (value.equalsIgnoreCase("FAIL")) {
+					style.setFillForegroundColor(IndexedColors.RED.getIndex());
+				} else {
+					style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+				}
+				Font font = wb.createFont();
+				font.setColor(IndexedColors.BLACK.getIndex());
+				style.setFont(font);
+				cell.setCellStyle(style);
+			}
 
-            log("INFO", "Excel Updated → Row " + rowNum + ", Column: " + columnName + " = " + value);
-            System.out.println("📘 Excel Updated → Row " + rowNum + ", Column: " + columnName + " = " + value);
+			fos = new FileOutputStream(filePath);
+			wb.write(fos);
 
-        } catch (Exception e) {
-            log("ERROR", "Failed to update Excel (Row " + rowNum + ", Column: " + columnName + "): " + e.getMessage());
-        } finally {
-            try {
-                if (fos != null) fos.close();
-                if (wb != null) wb.close();
-            } catch (Exception ignored) {}
-        }
-    }
+			log("INFO", "Excel Updated → Row " + rowNum + ", Column: " + columnName + " = " + value);
+			System.out.println("📘 Excel Updated → Row " + rowNum + ", Column: " + columnName + " = " + value);
 
-    /** Bulk write multiple columns with auto timestamp */
-    public synchronized void writeResultSet(int rowNum, Map<String, String> dataMap) {
-        Workbook wb = null;
-        FileOutputStream fos = null;
+		} catch (Exception e) {
+			log("ERROR", "Failed to update Excel (Row " + rowNum + ", Column: " + columnName + "): " + e.getMessage());
+		} finally {
+			try {
+				if (fos != null)
+					fos.close();
+				if (wb != null)
+					wb.close();
+			} catch (Exception ignored) {
+			}
+		}
+	}
 
-        try {
-            createBackup();
+	/** Bulk write multiple columns with auto timestamp */
+	public synchronized void writeResultSet(int rowNum, Map<String, String> dataMap) {
+		Workbook wb = null;
+		FileOutputStream fos = null;
 
-            try (FileInputStream fis = new FileInputStream(filePath)) {
-                wb = WorkbookFactory.create(fis);
-            }
+		try {
+			createBackup();
 
-            Sheet sh = wb.getSheet(sheetName);
-            Row headerRow = sh.getRow(0);
-            if (headerRow == null) headerRow = sh.createRow(0);
+			try (FileInputStream fis = new FileInputStream(filePath)) {
+				wb = WorkbookFactory.create(fis);
+			}
 
-            Row dataRow = sh.getRow(rowNum);
-            if (dataRow == null) dataRow = sh.createRow(rowNum);
+			Sheet sh = wb.getSheet(sheetName);
+			Row headerRow = sh.getRow(0);
+			if (headerRow == null)
+				headerRow = sh.createRow(0);
 
-            // Auto timestamp
-            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-            dataMap.put("ExecutionTime", timestamp);
+			Row dataRow = sh.getRow(rowNum);
+			if (dataRow == null)
+				dataRow = sh.createRow(rowNum);
 
-            for (Map.Entry<String, String> entry : dataMap.entrySet()) {
-                String columnName = entry.getKey();
-                String value = entry.getValue();
+			// Auto timestamp
+			String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+			dataMap.put("ExecutionTime", timestamp);
 
-                int colIndex = -1;
-                for (int i = 0; i < headerRow.getLastCellNum(); i++) {
-                    Cell headerCell = headerRow.getCell(i);
-                    if (headerCell != null && headerCell.getStringCellValue().equalsIgnoreCase(columnName)) {
-                        colIndex = i;
-                        break;
-                    }
-                }
+			for (Map.Entry<String, String> entry : dataMap.entrySet()) {
+				String columnName = entry.getKey();
+				String value = entry.getValue();
 
-                if (colIndex == -1) {
-                    colIndex = headerRow.getLastCellNum() == -1 ? 0 : headerRow.getLastCellNum();
-                    Cell newHeader = headerRow.createCell(colIndex);
-                    newHeader.setCellValue(columnName);
-                }
+				int colIndex = -1;
+				for (int i = 0; i < headerRow.getLastCellNum(); i++) {
+					Cell headerCell = headerRow.getCell(i);
+					if (headerCell != null && headerCell.getStringCellValue().equalsIgnoreCase(columnName)) {
+						colIndex = i;
+						break;
+					}
+				}
 
-                Cell cell = dataRow.getCell(colIndex);
-                if (cell == null) cell = dataRow.createCell(colIndex);
-                cell.setCellValue(value);
+				if (colIndex == -1) {
+					colIndex = headerRow.getLastCellNum() == -1 ? 0 : headerRow.getLastCellNum();
+					Cell newHeader = headerRow.createCell(colIndex);
+					newHeader.setCellValue(columnName);
+				}
 
-                // Color if status
-                if (columnName.equalsIgnoreCase("Status")) {
-                    CellStyle style = wb.createCellStyle();
-                    style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-                    if ("PASS".equalsIgnoreCase(value)) {
-                        style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
-                    } else if ("FAIL".equalsIgnoreCase(value)) {
-                        style.setFillForegroundColor(IndexedColors.RED.getIndex());
-                    } else {
-                        style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-                    }
-                    Font font = wb.createFont();
-                    font.setColor(IndexedColors.BLACK.getIndex());
-                    style.setFont(font);
-                    cell.setCellStyle(style);
-                }
-            }
+				Cell cell = dataRow.getCell(colIndex);
+				if (cell == null)
+					cell = dataRow.createCell(colIndex);
+				cell.setCellValue(value);
 
-            fos = new FileOutputStream(filePath);
-            wb.write(fos);
+				// Color if status
+				if (columnName.equalsIgnoreCase("Status")) {
+					CellStyle style = wb.createCellStyle();
+					style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+					if ("PASS".equalsIgnoreCase(value)) {
+						style.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+					} else if ("FAIL".equalsIgnoreCase(value)) {
+						style.setFillForegroundColor(IndexedColors.RED.getIndex());
+					} else {
+						style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+					}
+					Font font = wb.createFont();
+					font.setColor(IndexedColors.BLACK.getIndex());
+					style.setFont(font);
+					cell.setCellStyle(style);
+				}
+			}
 
-            String joined = dataMap.entrySet()
-                    .stream()
-                    .map(e -> e.getKey() + "=" + e.getValue())
-                    .collect(Collectors.joining(", "));
+			fos = new FileOutputStream(filePath);
+			wb.write(fos);
 
-            log("INFO", "Excel Updated → Row " + rowNum + ", Columns: " + joined);
-            System.out.println("📘 Excel Updated → Row " + rowNum + ", Columns: " + joined);
+			String joined = dataMap.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue())
+					.collect(Collectors.joining(", "));
 
-        } catch (Exception e) {
-            log("ERROR", "Failed to update Excel Row " + rowNum + ": " + e.getMessage());
-        } finally {
-            try {
-                if (fos != null) fos.close();
-                if (wb != null) wb.close();
-            } catch (Exception ignored) {}
-        }
-    }
+			log("INFO", "Excel Updated → Row " + rowNum + ", Columns: " + joined);
+			System.out.println("📘 Excel Updated → Row " + rowNum + ", Columns: " + joined);
+
+		} catch (Exception e) {
+			log("ERROR", "Failed to update Excel Row " + rowNum + ": " + e.getMessage());
+		} finally {
+			try {
+				if (fos != null)
+					fos.close();
+				if (wb != null)
+					wb.close();
+			} catch (Exception ignored) {
+			}
+		}
+	}
 }

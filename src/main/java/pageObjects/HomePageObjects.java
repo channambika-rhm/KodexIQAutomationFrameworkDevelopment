@@ -8,11 +8,10 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
 import testBase.TestBase;
 
 public class HomePageObjects extends TestBase {
-	
+
 	WebDriver driver;
 	WebDriverWait wait;
 
