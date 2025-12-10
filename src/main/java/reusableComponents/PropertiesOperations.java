@@ -17,7 +17,7 @@ public class PropertiesOperations {
 			fis = new FileInputStream(propFilePath);
 			prop.load(fis);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+			// TODO Auto-generated catch block 
 			e.printStackTrace();
 		}
 
@@ -31,5 +31,4 @@ public class PropertiesOperations {
 		return value;
 	}
 }
-
-//}
+ 
